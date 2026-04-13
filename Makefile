@@ -1,14 +1,31 @@
-asm = nasm
+ASM        = nasm
+SRC_DIR    = src
+BUILD_DIR  = build
 
-src_dir = src
-build_dir = build
+IMG        = $(BUILD_DIR)/os.img
+BOOT_BIN   = $(BUILD_DIR)/bootloader.bin
+KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 
-$(build_dir):
-	mkdir -p $(build_dir)
+# Target
+all: image
 
-$(build_dir)/main.img: $(build_dir)/main.bin
-	cp $(build_dir)/main.bin $(build_dir)/main.img
-	truncate -s 1440k $(build_dir)/main.img
+# OS image
+image: $(IMG)
 
-$(build_dir)/main.bin: $(src_dir)/main.asm
-	$(asm) $(src_dir)/main.asm -f bin -o $(build_dir)/main.bin
+$(IMG): $(BOOT_BIN) $(KERNEL_BIN) | $(BUILD_DIR)
+	dd if=/dev/zero of=$(IMG) bs=512 count=2880
+	mkfs.fat -F 12 -n "OS" $(IMG)
+	dd if=$(BOOT_BIN) of=$(IMG) conv=notrunc
+	mcopy -i $(IMG) $(KERNEL_BIN) "::kernel.bin"
+
+# Bootloader
+$(BOOT_BIN): | $(BUILD_DIR)
+	$(ASM) $(SRC_DIR)/bootloader/boot.asm -f bin -o $(BOOT_BIN)
+
+# Kernel
+$(KERNEL_BIN): | $(BUILD_DIR)
+	$(ASM) $(SRC_DIR)/kernel/main.asm -f bin -o $(KERNEL_BIN)
+
+# Build directory exists
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
