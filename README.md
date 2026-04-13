@@ -5,7 +5,13 @@
 - nasm
 - qemu-system-i386
 
-## Run (build and run)
+## Build
+
+```bash
+make
+```
+
+## Run
 
 ```bash
 ./run.sh

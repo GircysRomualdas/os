@@ -29,3 +29,6 @@ $(KERNEL_BIN): | $(BUILD_DIR)
 # Build directory exists
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+
+clean:
+	rm -rf $(BUILD_DIR)
