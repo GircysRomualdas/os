@@ -33,6 +33,14 @@ main:
   mov ss, ax
   mov sp, 0x7c00
 
+  ; Read from disk
+  mov [ebr_drive_number], dl
+  mov ax, 1
+  mov cl, 1
+  mov bx, 0x7e00
+  call disk_read
+
+  ; Print boot message
   mov si, os_boot_msg
   call print
 
@@ -40,7 +48,7 @@ main:
   hlt
   halt:
     jmp halt
-  
+
 print:
   push si
   push ax
@@ -63,7 +71,78 @@ print:
     pop si
     ret
 
+; fix later maby ?
+lba_to_chs:
+  push ax
+  push dx
+
+  xor dx, dx
+  div word [bdb_sectors_per_track]
+  inc dx
+  mov cx, dx ; sector
+
+  xor dx, dx
+  div word [bdb_heads]
+  mov dh, dl ; head
+  mov ch, al
+  shl ah, 6 
+  or cl, ah ; cylinder
+
+  pop ax
+  mov dl, al
+  pop ax
+  ret
+
+
+disk_read:
+  push ax
+  push bx
+  push cx
+  push dx
+  push di
+
+  call lba_to_chs
+
+  mov ah, 02h
+  mov di, 3 ; counter
+
+  disk_read_retry:
+    stc 
+    int 13h
+    jnc disk_read_done
+
+    call disk_reset
+    dec di
+    TEST di, di
+    jnz disk_read_retry
+    jmp fail_disk_read
+
+  disk_read_done:
+    pop di
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+disk_reset:
+  pusha
+  mov ah, 0
+  stc
+  int 13h
+  jc fail_disk_read
+  popa
+  ret
+
+fail_disk_read:
+  mov si, read_fail_msg
+  call print
+  hlt
+  jmp halt
+
+
 os_boot_msg: db "OS has booted!", 0x0d, 0x0a, 0
+read_fail_msg: db "Failed to read disk!", 0x0d, 0x0a, 0
 
 times 510 - ($ - $$) db 0
 dw 0aa55h
