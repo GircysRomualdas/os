@@ -6,6 +6,7 @@
 
 - nasm
 - qemu-system-i386
+- open-watcom-v2
 
 ## Build
 

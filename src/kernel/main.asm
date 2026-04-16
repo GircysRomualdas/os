@@ -1,34 +1,17 @@
-org 0x0
-bits 16
+BITS 16
+section _ENTRY class=CODE
+extern _cstart_
+global entry
 
-main:
-  mov si, os_boot_msg
-  call print
+entry:
+  cli
+  mov ax, ds
+  mov ss, ax
+  mov sp, 0
+  mov bp, sp
+  sti
 
+  call _cstart_
+
+  cli
   hlt
-  halt:
-    jmp halt
-  
-print:
-  push si
-  push ax
-  push bx
-
-  print_loop:
-    lodsb
-    or al, al
-    jz print_done
-
-    mov ah, 0x0e
-    mov bh, 0
-    int 0x10
-
-    jmp print_loop
-  
-  print_done:
-    pop bx
-    pop ax
-    pop si
-    ret
-
-os_boot_msg: db "OS has booted!", 0x0d, 0x0a, 0
