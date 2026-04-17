@@ -1,7 +1,5 @@
 # OS
 
-32-bit os
-
 ## Requirements
 
 - nasm
